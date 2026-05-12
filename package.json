@@ -1,9 +1,8 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "1.9.2",
+    "version": "1.9.3",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "author": "Diia",
-    "license": "SEE LICENSE IN LICENSE.md",
     "type": "module",
     "bin": {
         "diia-dev": "./bin/dev.mjs"
@@ -45,7 +44,7 @@
         "oxlint-tsgolint": ">= 0.20.0"
     },
     "devDependencies": {
-        "@diia-inhouse/configs": "6.1.1",
+        "@diia-inhouse/configs": "7.0.0",
         "@typescript-eslint/parser": "8.59.1",
         "@typescript-eslint/rule-tester": "8.59.1",
         "@vitest/coverage-v8": "4.1.5",
@@ -64,5 +63,6 @@
     "release": {
         "extends": "@diia-inhouse/configs/dist/semantic-release/package"
     },
-    "repository": "https://github.com/diia-open-source/be-oxc-config"
+    "repository": "https://github.com/diia-open-source/be-oxc-config",
+    "license": "SEE LICENSE IN LICENSE.md"
 }

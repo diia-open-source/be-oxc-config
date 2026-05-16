@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "1.9.3",
+    "version": "1.10.0",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "author": "Diia",
     "type": "module",

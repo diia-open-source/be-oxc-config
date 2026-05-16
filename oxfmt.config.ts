@@ -13,7 +13,7 @@ export default defineConfig({
         order: 'asc',
         ignoreCase: false,
         newlinesBetween: true,
-        internalPattern: [],
+        internalPattern: ['#'],
         groups: [
             'builtin',
             'external',
@@ -29,6 +29,7 @@ export default defineConfig({
             'mocks',
             'tests',
             'interfaces',
+            'internal',
             ['parent', 'sibling', 'index'],
         ],
         customGroups: [
@@ -42,43 +43,43 @@ export default defineConfig({
             },
             {
                 groupName: 'src-root',
-                elementNamePattern: ['@src/**'],
+                elementNamePattern: ['@src/**', '#src/**'],
             },
             {
                 groupName: 'actions',
-                elementNamePattern: ['@actions/**'],
+                elementNamePattern: ['@actions/**', '#actions/**'],
             },
             {
                 groupName: 'services',
-                elementNamePattern: ['@services/**'],
+                elementNamePattern: ['@services/**', '#services/**'],
             },
             {
                 groupName: 'providers',
-                elementNamePattern: ['@providers/**'],
+                elementNamePattern: ['@providers/**', '#providers/**'],
             },
             {
                 groupName: 'models',
-                elementNamePattern: ['@models/**'],
+                elementNamePattern: ['@models/**', '#models/**'],
             },
             {
                 groupName: 'data-mappers',
-                elementNamePattern: ['@dataMappers/**'],
+                elementNamePattern: ['@dataMappers/**', '#dataMappers/**'],
             },
             {
                 groupName: 'utils',
-                elementNamePattern: ['@utils', '@utils/**'],
+                elementNamePattern: ['@utils', '@utils/**', '#utils', '#utils/**'],
             },
             {
                 groupName: 'mocks',
-                elementNamePattern: ['@mocks/**'],
+                elementNamePattern: ['@mocks/**', '#mocks/**'],
             },
             {
                 groupName: 'tests',
-                elementNamePattern: ['@tests/**'],
+                elementNamePattern: ['@tests/**', '#tests/**'],
             },
             {
                 groupName: 'interfaces',
-                elementNamePattern: ['@interfaces/**'],
+                elementNamePattern: ['@interfaces/**', '#interfaces/**'],
             },
         ],
     },

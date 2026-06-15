@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module'
 
-import { defineConfig, type OxlintConfig } from 'oxlint'
+import { defineConfig as defineOxlintConfig, type OxlintConfig } from 'oxlint'
 
 type Config = OxlintConfig & { ignorePatterns: string[] }
 
@@ -243,7 +243,7 @@ const baseConfig: OxlintConfig = {
             },
         },
         {
-            files: ['**/deps/**', '**/deps.ts', 'src/index.ts'],
+            files: ['**/deps/**', '**/deps.ts', 'src/index.ts', 'src/workerEntry.ts'],
             rules: {
                 'eslint/no-restricted-imports': 'off',
             },
@@ -385,6 +385,8 @@ const boundariesExtension: Partial<OxlintConfig> = {
                                 { type: 'deps' },
                                 { type: 'configs' },
                                 { type: 'worker' },
+                                { type: 'workerActivities' },
+                                { type: 'workerWorkflows' },
                             ],
                         },
                     },
@@ -468,13 +470,36 @@ const boundariesExtension: Partial<OxlintConfig> = {
     },
 }
 
-export const base: Config = defineConfig(baseConfig) as Config
+export const base: Config = defineOxlintConfig(baseConfig) as Config
 
-export const boundaries: Config = defineConfig({
+export const boundaries: Config = defineOxlintConfig({
     ...baseConfig,
     jsPlugins: [...(baseConfig.jsPlugins ?? []), ...(boundariesExtension.jsPlugins ?? [])],
     settings: { ...boundariesExtension.settings },
     rules: { ...baseConfig.rules, ...boundariesExtension.rules },
 }) as Config
 
-export { defineConfig }
+const sharedOverrides = baseConfig.overrides ?? []
+
+/**
+ * `defineConfig` used by every service's `oxlint.config.ts`.
+ *
+ * A service that sets its own `overrides` array does `{ ...boundaries, overrides: [...] }`.
+ * The shallow spread copies `boundaries.overrides`, but the explicit `overrides` key then
+ * *replaces* it — silently dropping the shared exemptions. To make consumption safe, we
+ * always prepend the shared overrides.
+ *
+ * Dedupe is by object identity, not by `files`: we only strip the shared overrides a service
+ * re-introduced by spreading `...boundaries.overrides` (oxlint's `defineConfig` is identity, so
+ * those are the same object references). Everything a service actually authored is kept and
+ * appended *after* the shared overrides — and since a later matching override wins in oxlint, a
+ * service can still redefine rules for the same `files` glob (e.g. re-enable a shared exemption).
+ */
+export const defineConfig = (config: OxlintConfig): OxlintConfig => {
+    const serviceOverrides = (config.overrides ?? []).filter((override) => !sharedOverrides.includes(override))
+
+    return defineOxlintConfig({
+        ...config,
+        overrides: [...sharedOverrides, ...serviceOverrides],
+    })
+}

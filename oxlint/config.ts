@@ -43,6 +43,7 @@ const baseConfig: OxlintConfig = {
         'eslint/no-cond-assign': ['error', 'always'],
         'eslint/no-console': 'error',
         'eslint/no-underscore-dangle': ['warn', { allow: ['_id'] }],
+        'eslint/default-case': 'error',
 
         // Projects use vitest; disable duplicate jest plugin diagnostics
         'jest/valid-title': 'off',

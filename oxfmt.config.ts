@@ -15,6 +15,7 @@ export default defineConfig({
         newlinesBetween: true,
         internalPattern: ['#'],
         groups: [
+            'tracing',
             'builtin',
             'external',
             'diia-app',
@@ -33,6 +34,10 @@ export default defineConfig({
             ['parent', 'sibling', 'index'],
         ],
         customGroups: [
+            {
+                groupName: 'tracing',
+                elementNamePattern: ['@diia-inhouse/diia-app/tracing/register'],
+            },
             {
                 groupName: 'diia-app',
                 elementNamePattern: ['@diia-inhouse/diia-app'],

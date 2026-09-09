@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "2.1.4",
+    "version": "2.1.5",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "author": "Diia",
     "type": "module",
@@ -47,15 +47,15 @@
         "@diia-inhouse/configs": "7.2.1",
         "@typescript-eslint/parser": "8.60.1",
         "@typescript-eslint/rule-tester": "8.60.1",
-        "@vitest/coverage-v8": "4.1.8",
-        "@vitest/ui": "4.1.8",
+        "@vitest/coverage-v8": "5.0.0",
+        "@vitest/ui": "5.0.0",
         "lockfile-lint": "5.0.0",
         "madge": "8.0.0",
         "oxfmt": "0.47.0",
         "oxlint": "1.62.0",
         "oxlint-tsgolint": "0.22.1",
         "semantic-release": "25.0.3",
-        "vitest": "4.1.8"
+        "vitest": "5.0.0"
     },
     "commitlint": {
         "extends": "@diia-inhouse/configs/dist/commitlint"

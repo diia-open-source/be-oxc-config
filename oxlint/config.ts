@@ -318,6 +318,7 @@ const boundariesExtension: Partial<OxlintConfig> = {
             {
                 default: 'disallow',
                 rules: [
+                    { from: { type: ['viewsTypes', 'servicesTypes'] }, allow: { to: [{ type: 'locales' }] } },
                     {
                         from: { type: 'actions' },
                         allow: {
@@ -365,7 +366,6 @@ const boundariesExtension: Partial<OxlintConfig> = {
                         from: { type: 'views' },
                         allow: { to: [{ type: 'viewsTypes' }, { type: 'servicesTypes' }, { type: 'modelsTypes' }, { type: 'generated' }] },
                     },
-                    { from: { type: 'viewsTypes' }, allow: { to: [{ type: 'locales' }] } },
                     {
                         from: { type: 'repositories' },
                         allow: { to: [{ type: 'models' }, { type: 'configsTypes' }, { type: 'modelsTypes' }] },

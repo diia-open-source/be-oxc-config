@@ -297,6 +297,7 @@ const boundariesExtension: Partial<OxlintConfig> = {
             { type: 'services', pattern: 'src/services/**' },
             { type: 'configsTypes', pattern: 'src/configs/*types.ts', mode: 'file' },
             { type: 'configs', pattern: 'src/configs/**' },
+            { type: 'localesPdf', pattern: 'src/locales/*/pdf/**' },
             { type: 'locales', pattern: 'src/locales/**' },
             { type: 'eventListenersTypes', pattern: 'src/eventListeners/*.types.ts', mode: 'file', capture: ['eventName'] },
             { type: 'eventListeners', pattern: 'src/eventListeners/*.ts', mode: 'file', capture: ['eventName'] },
@@ -326,7 +327,6 @@ const boundariesExtension: Partial<OxlintConfig> = {
             {
                 default: 'disallow',
                 rules: [
-                    { from: { type: ['viewsTypes', 'servicesTypes'] }, allow: { to: [{ type: 'locales' }] } },
                     {
                         from: { type: 'actions' },
                         allow: {
@@ -374,6 +374,7 @@ const boundariesExtension: Partial<OxlintConfig> = {
                         from: { type: 'views' },
                         allow: { to: [{ type: 'viewsTypes' }, { type: 'servicesTypes' }, { type: 'modelsTypes' }, { type: 'generated' }] },
                     },
+                    { from: { type: 'viewsTypes' }, allow: { to: [{ type: 'locales' }] } },
                     {
                         from: { type: 'repositories' },
                         allow: { to: [{ type: 'models' }, { type: 'configsTypes' }, { type: 'modelsTypes' }] },
@@ -383,7 +384,10 @@ const boundariesExtension: Partial<OxlintConfig> = {
                         allow: { to: [{ type: 'modelsTypes', captured: { modelName: '{{ from.captured.modelName }}' } }] },
                     },
                     { from: { type: 'tests' }, allow: { to: [{ type: '*' }] } },
-                    { from: { type: 'servicesTypes' }, allow: { to: [{ type: 'servicesTypes' }, { type: 'modelsTypes' }] } },
+                    {
+                        from: { type: 'servicesTypes' },
+                        allow: { to: [{ type: 'servicesTypes' }, { type: 'modelsTypes' }, { type: 'localesPdf' }] },
+                    },
                     {
                         from: { type: 'srcRoot' },
                         allow: {

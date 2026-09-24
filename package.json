@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "author": "Diia",
     "type": "module",
@@ -31,7 +31,7 @@
     },
     "dependencies": {
         "@boundaries/eslint-plugin": "6.0.2",
-        "@diia-inhouse/eslint-plugin": "1.9.11",
+        "@diia-inhouse/eslint-plugin": "1.9.12",
         "@stylistic/eslint-plugin": "5.10.0",
         "@typescript-eslint/eslint-plugin": "8.60.1",
         "eslint-import-resolver-oxc": "0.15.0",

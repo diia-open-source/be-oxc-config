@@ -7,9 +7,6 @@ type Config = OxlintConfig & { ignorePatterns: string[] }
 const require = createRequire(import.meta.url)
 const resolve = (pkg: string): string => require.resolve(pkg).replace(/\/[^/]+$/, '')
 const resolveFile = (path: string): string => new URL(path, import.meta.url).pathname
-// A package that ships `exports` without `main` cannot be loaded from its directory,
-// so it is pointed at its entry file instead of being stripped back by `resolve`.
-const resolveEntry = (pkg: string): string => require.resolve(pkg)
 
 const baseConfig: OxlintConfig = {
     plugins: ['unicorn', 'typescript', 'import', 'promise', 'node', 'vitest', 'oxc'],
@@ -19,12 +16,12 @@ const baseConfig: OxlintConfig = {
         resolve('eslint-plugin-regexp'),
         { name: '@stylistic/js', specifier: resolve('@stylistic/eslint-plugin') },
         resolve('@diia-inhouse/eslint-plugin'),
-        { name: 'ts-eslint', specifier: resolveEntry('@typescript-eslint/eslint-plugin') },
         { name: '@diia-inhouse/package', specifier: resolveFile('./plugins/packageCheck.mjs') },
         { name: '@diia-inhouse/locale', specifier: resolveFile('./plugins/noHardcodedCyrillic.mjs') },
         { name: '@diia-inhouse/test', specifier: resolveFile('./plugins/testConventions.mjs') },
         { name: '@diia-inhouse/mongoose', specifier: resolveFile('./plugins/mongooseSchema.mjs') },
         { name: '@diia-inhouse/class', specifier: resolveFile('./plugins/classEncapsulation.mjs') },
+        { name: '@diia-inhouse/class-conventions', specifier: resolveFile('./plugins/classConventions.mjs') },
         { name: '@diia-inhouse/temporal', specifier: resolveFile('./plugins/temporalConventions.mjs') },
         { name: '@diia-inhouse/code', specifier: resolveFile('./plugins/codeConventions.mjs') },
     ],
@@ -226,10 +223,7 @@ const baseConfig: OxlintConfig = {
         '@diia-inhouse/mongoose/sub-schema-id-false': 'off',
         '@diia-inhouse/class/no-module-level-const': 'warn',
         '@diia-inhouse/class/no-interface-in-implementation': 'warn',
-
-        // Carried by the ESLint config until the oxc migration; oxlint has no native
-        // equivalent, so the original rule runs as a JS plugin at its original severity.
-        'ts-eslint/member-ordering': 'error',
+        '@diia-inhouse/class-conventions/member-ordering': 'error',
         '@diia-inhouse/temporal/workflow-single-param': 'error',
         '@diia-inhouse/temporal/async-activity': 'error',
         '@diia-inhouse/temporal/no-node-imports': 'error',

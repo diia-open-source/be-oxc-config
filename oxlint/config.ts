@@ -114,7 +114,7 @@ const baseConfig: OxlintConfig = {
         'unicorn/prefer-spread': 'off',
         'unicorn/require-post-message-target-origin': 'off',
         'unicorn/no-array-sort': 'off',
-        'unicorn/no-array-reduce': 'error',
+        'unicorn/no-array-reduce': ['error', { allowSimpleOperations: false }],
 
         'promise/always-return': 'error',
         'promise/no-return-wrap': 'error',

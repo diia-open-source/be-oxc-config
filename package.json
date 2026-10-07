@@ -1,27 +1,27 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "3.2.0",
+    "version": "4.0.0",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
-    "author": "Diia",
-    "type": "module",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "author": "diia-team",
+    "repository": "https://github.com/diia-open-source/be-oxc-config",
     "bin": {
         "diia-dev": "./bin/dev.mjs"
-    },
-    "exports": {
-        "./oxlint": "./dist/oxlint/config.js",
-        "./oxfmt": "./dist/oxfmt.config.js"
     },
     "files": [
         "dist",
         "oxlint/plugins",
         "bin"
     ],
-    "engines": {
-        "node": ">=22"
+    "type": "module",
+    "exports": {
+        "./oxlint": "./dist/oxlint/config.js",
+        "./oxfmt": "./dist/oxfmt.config.js",
+        "./package.json": "./package.json"
     },
     "scripts": {
         "test": "vitest run",
-        "build": "tsc -p tsconfig.build.json && cp -r oxlint/plugins dist/oxlint/plugins",
+        "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -r oxlint/plugins dist/oxlint/",
         "prepare": "npm run build",
         "lint": "oxlint && oxfmt --check",
         "lint-fix": "oxlint --fix && oxfmt",
@@ -30,32 +30,32 @@
         "semantic-release": "semantic-release"
     },
     "dependencies": {
-        "@boundaries/eslint-plugin": "6.0.2",
+        "@boundaries/eslint-plugin": "7.2.0",
         "@diia-inhouse/eslint-plugin": "1.9.13",
         "@stylistic/eslint-plugin": "5.10.0",
         "eslint-import-resolver-oxc": "0.15.0",
-        "eslint-plugin-regexp": "3.1.0",
-        "eslint-plugin-security": "4.0.0",
-        "tsx": "4.22.4"
-    },
-    "peerDependencies": {
-        "oxfmt": ">= 0.43.0",
-        "oxlint": ">= 1.58.0",
-        "oxlint-tsgolint": ">= 0.20.0"
+        "eslint-plugin-regexp": "3.3.1",
+        "eslint-plugin-security": "4.2.0",
+        "tsx": "4.23.15"
     },
     "devDependencies": {
         "@diia-inhouse/configs": "7.2.2",
-        "@typescript-eslint/parser": "8.60.1",
-        "@typescript-eslint/rule-tester": "8.60.1",
-        "@vitest/coverage-v8": "5.0.0",
-        "@vitest/ui": "5.0.0",
-        "lockfile-lint": "5.0.0",
+        "@typescript-eslint/parser": "8.71.1",
+        "@typescript-eslint/rule-tester": "8.71.1",
+        "@vitest/coverage-v8": "5.0.3",
+        "@vitest/ui": "5.0.3",
+        "lockfile-lint": "5.0.1",
         "madge": "8.0.0",
-        "oxfmt": "0.47.0",
-        "oxlint": "1.62.0",
-        "oxlint-tsgolint": "0.22.1",
-        "semantic-release": "25.0.3",
-        "vitest": "5.0.0"
+        "oxfmt": "0.72.0",
+        "oxlint": "1.87.0",
+        "oxlint-tsgolint": "7.0.2003",
+        "semantic-release": "25.0.9",
+        "vitest": "5.0.3"
+    },
+    "peerDependencies": {
+        "oxfmt": ">= 0.72.0",
+        "oxlint": ">= 1.87.0",
+        "oxlint-tsgolint": ">= 7.0.0"
     },
     "commitlint": {
         "extends": "@diia-inhouse/configs/dist/commitlint"
@@ -63,6 +63,10 @@
     "release": {
         "extends": "@diia-inhouse/configs/dist/semantic-release/package"
     },
-    "repository": "https://github.com/diia-open-source/be-oxc-config",
-    "license": "SEE LICENSE IN LICENSE.md"
+    "engines": {
+        "node": ">=24"
+    },
+    "madge": {
+        "tsConfig": "./tsconfig.json"
+    }
 }

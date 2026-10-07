@@ -89,7 +89,7 @@ export default defineConfig({
         ],
     },
 
-    sortPackageJson: false,
+    sortPackageJson: true,
 
     ignorePatterns: ['dist', 'node_modules', 'src/generated', 'coverage'],
 })

@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url)
 const resolve = (pkg: string): string => require.resolve(pkg).replace(/\/[^/]+$/, '')
 const resolveFile = (path: string): string => new URL(path, import.meta.url).pathname
 
-const baseConfig: OxlintConfig = {
+const baseConfig: Config = {
     plugins: ['unicorn', 'typescript', 'import', 'promise', 'node', 'vitest', 'oxc'],
 
     jsPlugins: [
@@ -210,6 +210,22 @@ const baseConfig: OxlintConfig = {
         '@diia-inhouse/logger-err-field': 'error',
         '@diia-inhouse/package/no-service-in-package-name': 'error',
         '@diia-inhouse/package/pinned-dependencies': 'error',
+        '@diia-inhouse/package/unique-dependencies': 'error',
+        '@diia-inhouse/package/no-dev-tooling-in-dependencies': 'error',
+        '@diia-inhouse/package/private-package': 'error',
+        '@diia-inhouse/package/no-publish-fields': 'error',
+        '@diia-inhouse/package/no-empty-fields': 'error',
+        '@diia-inhouse/package/engines-node': 'error',
+        '@diia-inhouse/package/author': 'error',
+        '@diia-inhouse/package/description': 'error',
+        '@diia-inhouse/package/no-legacy-tooling': 'error',
+        '@diia-inhouse/package/no-legacy-config-fields': 'error',
+        '@diia-inhouse/package/no-legacy-scripts': 'error',
+        '@diia-inhouse/package/dev-script': 'error',
+        '@diia-inhouse/package/shared-configs': 'error',
+        '@diia-inhouse/package/stale-overrides': 'warn',
+        '@diia-inhouse/package/peers-installed-locally': 'error',
+        '@diia-inhouse/package/exports-package-json': 'error',
         '@diia-inhouse/locale/no-hardcoded-cyrillic': 'error',
         '@diia-inhouse/code/no-promise-settimeout': 'error',
         '@diia-inhouse/code/no-inline-object-return-type': 'error',
@@ -276,215 +292,287 @@ const boundariesExtension: Partial<OxlintConfig> = {
 
     settings: {
         'import/resolver': { oxc: {} },
-        'boundaries/elements': [
-            { type: 'actionsTypes', pattern: 'src/actions/**/*.types.ts', mode: 'file', capture: ['version', 'actionName'] },
-            { type: 'actions', pattern: 'src/actions/**/*.ts', mode: 'file', capture: ['version', 'actionName'] },
-            { type: 'viewsTypes', pattern: 'src/views/*types.ts', mode: 'file' },
-            { type: 'views', pattern: 'src/views/**' },
-            { type: 'schemas', pattern: 'src/**/*.schema.ts', mode: 'file' },
-            { type: 'providersTypes', pattern: 'src/providers/**/*types.ts', mode: 'file', capture: ['providerName'] },
-            { type: 'providers', pattern: 'src/providers/**', capture: ['providerName'] },
-            { type: 'repositories', pattern: 'src/repositories/**' },
-            { type: 'modelsTypes', pattern: 'src/models/*.types.ts', mode: 'file', capture: ['modelName'] },
-            { type: 'models', pattern: 'src/models/*.ts', mode: 'file', capture: ['modelName'] },
-            { type: 'servicesTypes', pattern: 'src/services/**/*types.ts', mode: 'file' },
-            { type: 'services', pattern: 'src/services/**' },
-            { type: 'configsTypes', pattern: 'src/configs/*types.ts', mode: 'file' },
-            { type: 'configs', pattern: 'src/configs/**' },
-            { type: 'localesPdf', pattern: 'src/locales/*/pdf/**' },
-            { type: 'locales', pattern: 'src/locales/**' },
-            { type: 'eventListenersTypes', pattern: 'src/eventListeners/*.types.ts', mode: 'file', capture: ['eventName'] },
-            { type: 'eventListeners', pattern: 'src/eventListeners/*.ts', mode: 'file', capture: ['eventName'] },
-            { type: 'externalEventListenersTypes', pattern: 'src/externalEventListeners/*.types.ts', mode: 'file', capture: ['eventName'] },
-            { type: 'externalEventListeners', pattern: 'src/externalEventListeners/*.ts', mode: 'file', capture: ['eventName'] },
-            { type: 'workerWorkflowsTypes', pattern: 'src/worker/workflows/**/*.types.ts', mode: 'file' },
-            { type: 'workerWorkflows', pattern: 'src/worker/workflows/**' },
-            { type: 'workerActivities', pattern: 'src/worker/activities/**' },
-            { type: 'workerSchedules', pattern: 'src/worker/schedules/**' },
-            { type: 'worker', pattern: 'src/worker/**' },
-            { type: 'depsTypes', pattern: 'src/deps/*types.ts', mode: 'file' },
-            { type: 'deps', pattern: 'src/deps/**', mode: 'file' },
-            { type: 'srcRoot', pattern: 'src/*', mode: 'file' },
-            { type: 'tests', pattern: 'tests/**' },
-            { type: 'migrations', pattern: 'migrations/**' },
-            { type: 'configFiles', pattern: '*.{json,md,mjs,mts,ts}', mode: 'full' },
-            { type: 'generated', pattern: 'src/generated/**' },
+        'boundaries/files-single-match': true,
+        'boundaries/files': [
+            { pattern: 'src/actions/**/*.types.ts', category: 'actionsTypes', capture: ['version', 'actionName'] },
+            { pattern: 'src/actions/**/*.ts', category: 'actions', capture: ['version', 'actionName'] },
+            { pattern: 'src/views/*types.ts', category: 'viewsTypes' },
+            { pattern: 'src/views/**', category: 'views' },
+            { pattern: 'src/**/*.schema.ts', category: 'schemas' },
+            { pattern: 'src/providers/**/*types.ts', category: 'providersTypes', capture: ['providerName'] },
+            { pattern: 'src/providers/**/*', category: 'providers', capture: ['providerName'] },
+            { pattern: 'src/repositories/**', category: 'repositories' },
+            { pattern: 'src/models/*.types.ts', category: 'modelsTypes', capture: ['modelName'] },
+            { pattern: 'src/models/*.ts', category: 'models', capture: ['modelName'] },
+            { pattern: 'src/services/**/*types.ts', category: 'servicesTypes' },
+            { pattern: 'src/services/**', category: 'services' },
+            { pattern: 'src/configs/*types.ts', category: 'configsTypes' },
+            { pattern: 'src/configs/**', category: 'configs' },
+            { pattern: 'src/locales/*/pdf/**', category: 'localesPdf', capture: ['locale'] },
+            { pattern: 'src/locales/**', category: 'locales' },
+            { pattern: 'src/eventListeners/*.types.ts', category: 'eventListenersTypes', capture: ['eventName'] },
+            { pattern: 'src/eventListeners/*.ts', category: 'eventListeners', capture: ['eventName'] },
+            { pattern: 'src/externalEventListeners/*.types.ts', category: 'externalEventListenersTypes', capture: ['eventName'] },
+            { pattern: 'src/externalEventListeners/*.ts', category: 'externalEventListeners', capture: ['eventName'] },
+            { pattern: 'src/worker/workflows/**/*.types.ts', category: 'workerWorkflowsTypes' },
+            { pattern: 'src/worker/workflows/**', category: 'workerWorkflows' },
+            { pattern: 'src/worker/activities/**', category: 'workerActivities' },
+            { pattern: 'src/worker/schedules/**', category: 'workerSchedules' },
+            { pattern: 'src/worker/**', category: 'worker' },
+            { pattern: 'src/deps/*types.ts', category: 'depsTypes' },
+            { pattern: 'src/deps/**', category: 'deps' },
+            { pattern: 'src/*', category: 'srcRoot' },
+            { pattern: 'tests/**', category: 'tests' },
+            { pattern: 'migrations/**', category: 'migrations' },
+            { pattern: '*.{json,md,mjs,mts,ts}', category: 'configFiles' },
+            { pattern: 'src/generated/**', category: 'generated' },
         ],
     },
 
     rules: {
-        'boundaries/no-unknown': 'error',
+        'boundaries/no-unknown-dependencies': 'error',
         'boundaries/no-unknown-files': 'error',
-        'boundaries/entry-point': 'error',
         'boundaries/dependencies': [
             'error',
             {
                 default: 'disallow',
-                rules: [
+                policies: [
                     {
-                        from: { type: 'actions' },
+                        from: { file: { categories: 'actions' } },
                         allow: {
                             to: [
-                                { type: 'services' },
-                                { type: 'servicesTypes' },
-                                { type: 'views' },
-                                { type: 'generated' },
-                                { type: 'schemas' },
-                                { type: 'modelsTypes' },
-                                { type: 'actionsTypes', captured: { actionName: '{{ from.captured.actionName }}' } },
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'views' } },
+                                { file: { categories: 'generated' } },
+                                { file: { categories: 'schemas' } },
+                                { file: { categories: 'modelsTypes' } },
+                                { file: { categories: 'actionsTypes', captured: { actionName: '{{ from.file.captured.actionName }}' } } },
                             ],
                         },
                     },
-                    { from: { type: 'actionsTypes' }, allow: { to: [{ type: 'generated' }] } },
+                    { from: { file: { categories: 'actionsTypes' } }, allow: { to: [{ file: { categories: 'generated' } }] } },
                     {
-                        from: { type: 'services' },
+                        from: { file: { categories: 'services' } },
                         allow: {
                             to: [
-                                { type: 'services' },
-                                { type: 'servicesTypes' },
-                                { type: 'providers' },
-                                { type: 'providersTypes' },
-                                { type: 'repositories' },
-                                { type: 'modelsTypes' },
-                                { type: 'configsTypes' },
-                                { type: 'workerWorkflows' },
-                                { type: 'workerWorkflowsTypes' },
-                            ],
-                        },
-                    },
-                    {
-                        from: { type: 'providers' },
-                        allow: {
-                            to: [
-                                { type: 'configsTypes' },
-                                { type: 'schemas' },
-                                { type: 'providersTypes', captured: { providerName: '{{ from.captured.providerName }}' } },
-                            ],
-                        },
-                    },
-                    { from: { type: 'providersTypes' }, allow: { to: [{ type: 'modelsTypes' }] } },
-                    { from: { type: 'schemas' }, allow: [] },
-                    {
-                        from: { type: 'views' },
-                        allow: { to: [{ type: 'viewsTypes' }, { type: 'servicesTypes' }, { type: 'modelsTypes' }, { type: 'generated' }] },
-                    },
-                    { from: { type: 'viewsTypes' }, allow: { to: [{ type: 'locales' }] } },
-                    {
-                        from: { type: 'repositories' },
-                        allow: { to: [{ type: 'models' }, { type: 'configsTypes' }, { type: 'modelsTypes' }] },
-                    },
-                    {
-                        from: { type: 'models' },
-                        allow: { to: [{ type: 'modelsTypes', captured: { modelName: '{{ from.captured.modelName }}' } }] },
-                    },
-                    { from: { type: 'tests' }, allow: { to: [{ type: '*' }] } },
-                    {
-                        from: { type: 'servicesTypes' },
-                        allow: { to: [{ type: 'servicesTypes' }, { type: 'modelsTypes' }, { type: 'localesPdf' }] },
-                    },
-                    {
-                        from: { type: 'srcRoot' },
-                        allow: {
-                            to: [
-                                { type: 'srcRoot' },
-                                { type: 'depsTypes' },
-                                { type: 'configsTypes' },
-                                { type: 'deps' },
-                                { type: 'configs' },
-                                { type: 'worker' },
-                                { type: 'workerActivities' },
-                                { type: 'workerWorkflows' },
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'providers' } },
+                                { file: { categories: 'providersTypes' } },
+                                { file: { categories: 'repositories' } },
+                                { file: { categories: 'modelsTypes' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'workerWorkflows' } },
+                                { file: { categories: 'workerWorkflowsTypes' } },
                             ],
                         },
                     },
                     {
-                        from: { type: 'deps' },
+                        from: { file: { categories: 'providers' } },
                         allow: {
                             to: [
-                                { type: 'depsTypes' },
-                                { type: 'configsTypes' },
-                                { type: 'models' },
-                                { type: 'viewsTypes' },
-                                { type: 'providers' },
-                                { type: 'services' },
+                                { file: { categories: 'providers' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'schemas' } },
+                                {
+                                    file: {
+                                        categories: 'providersTypes',
+                                        captured: { providerName: '{{ from.file.captured.providerName }}' },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    { from: { file: { categories: 'providersTypes' } }, allow: { to: [{ file: { categories: 'modelsTypes' } }] } },
+                    { from: { file: { categories: 'schemas' } }, allow: [] },
+                    {
+                        from: { file: { categories: 'views' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'views' } },
+                                { file: { categories: 'viewsTypes' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'modelsTypes' } },
+                                { file: { categories: 'generated' } },
+                            ],
+                        },
+                    },
+                    { from: { file: { categories: 'viewsTypes' } }, allow: { to: [{ file: { categories: 'locales' } }] } },
+                    {
+                        from: { file: { categories: 'repositories' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'repositories' } },
+                                { file: { categories: 'models' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'modelsTypes' } },
                             ],
                         },
                     },
                     {
-                        from: { type: 'depsTypes' },
-                        allow: { to: [{ type: 'configsTypes' }, { type: 'viewsTypes' }, { type: 'providers' }] },
-                    },
-                    { from: { type: 'configs' }, allow: { to: [{ type: 'configsTypes' }] } },
-                    { from: { type: 'configsTypes' }, allow: { to: [{ type: 'configs' }] } },
-                    { from: { type: 'eventListenersTypes' }, allow: { to: [{ type: 'modelsTypes' }] } },
-                    {
-                        from: { type: 'eventListeners' },
+                        from: { file: { categories: 'models' } },
                         allow: {
-                            to: [
-                                { type: 'services' },
-                                { type: 'servicesTypes' },
-                                { type: 'configsTypes' },
-                                { type: 'schemas' },
-                                { type: 'eventListenersTypes', captured: { eventName: '{{ from.captured.eventName }}' } },
-                            ],
+                            to: [{ file: { categories: 'modelsTypes', captured: { modelName: '{{ from.file.captured.modelName }}' } } }],
                         },
                     },
-                    { from: { type: 'externalEventListenersTypes' }, allow: [] },
+                    { from: { file: { categories: 'tests' } }, allow: { to: [{ file: { categories: '*' } }] } },
                     {
-                        from: { type: 'externalEventListeners' },
+                        from: { file: { categories: 'servicesTypes' } },
                         allow: {
                             to: [
-                                { type: 'services' },
-                                { type: 'configsTypes' },
-                                { type: 'schemas' },
-                                { type: 'externalEventListenersTypes', captured: { eventName: '{{ from.captured.eventName }}' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'modelsTypes' } },
+                                { file: { categories: 'localesPdf' } },
                             ],
                         },
                     },
                     {
-                        from: { type: 'worker' },
-                        allow: { to: [{ type: 'configsTypes' }, { type: 'depsTypes' }, { type: 'workerActivities' }] },
-                    },
-                    {
-                        from: { type: 'workerActivities' },
+                        from: { file: { categories: 'srcRoot' } },
                         allow: {
                             to: [
-                                { type: 'services' },
-                                { type: 'servicesTypes' },
-                                { type: 'repositories' },
-                                { type: 'modelsTypes' },
-                                { type: 'configsTypes' },
+                                { file: { categories: 'srcRoot' } },
+                                { file: { categories: 'depsTypes' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'deps' } },
+                                { file: { categories: 'configs' } },
+                                { file: { categories: 'worker' } },
+                                { file: { categories: 'workerActivities' } },
+                                { file: { categories: 'workerWorkflows' } },
                             ],
                         },
                     },
-                    { from: { type: 'workerWorkflowsTypes' }, allow: [] },
                     {
-                        from: { type: 'workerWorkflows' },
+                        from: { file: { categories: 'deps' } },
                         allow: {
                             to: [
-                                { type: 'services' },
-                                { type: 'configsTypes' },
-                                { type: 'workerActivities' },
-                                { type: 'workerWorkflowsTypes' },
+                                { file: { categories: 'deps' } },
+                                { file: { categories: 'depsTypes' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'models' } },
+                                { file: { categories: 'viewsTypes' } },
+                                { file: { categories: 'providers' } },
+                                { file: { categories: 'services' } },
                             ],
                         },
                     },
-                    { from: { type: 'workerSchedules' }, allow: { to: [{ type: 'configsTypes' }, { type: 'workerWorkflows' }] } },
-                    { from: { type: 'migrations' }, allow: { to: [{ type: '*' }] } },
+                    {
+                        from: { file: { categories: 'depsTypes' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'viewsTypes' } },
+                                { file: { categories: 'providers' } },
+                            ],
+                        },
+                    },
+                    {
+                        from: { file: { categories: 'configs' } },
+                        allow: { to: [{ file: { categories: 'configs' } }, { file: { categories: 'configsTypes' } }] },
+                    },
+                    { from: { file: { categories: 'configsTypes' } }, allow: { to: [{ file: { categories: 'configs' } }] } },
+                    { from: { file: { categories: 'locales' } }, allow: { to: [{ file: { categories: 'locales' } }] } },
+                    {
+                        from: { file: { categories: 'localesPdf' } },
+                        allow: { to: [{ file: { categories: 'localesPdf', captured: { locale: '{{ from.file.captured.locale }}' } } }] },
+                    },
+                    { from: { file: { categories: 'eventListenersTypes' } }, allow: { to: [{ file: { categories: 'modelsTypes' } }] } },
+                    {
+                        from: { file: { categories: 'eventListeners' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'schemas' } },
+                                {
+                                    file: {
+                                        categories: 'eventListenersTypes',
+                                        captured: { eventName: '{{ from.file.captured.eventName }}' },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    { from: { file: { categories: 'externalEventListenersTypes' } }, allow: [] },
+                    {
+                        from: { file: { categories: 'externalEventListeners' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'schemas' } },
+                                {
+                                    file: {
+                                        categories: 'externalEventListenersTypes',
+                                        captured: { eventName: '{{ from.file.captured.eventName }}' },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        from: { file: { categories: 'worker' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'worker' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'depsTypes' } },
+                                { file: { categories: 'workerActivities' } },
+                            ],
+                        },
+                    },
+                    {
+                        from: { file: { categories: 'workerActivities' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'workerActivities' } },
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'servicesTypes' } },
+                                { file: { categories: 'repositories' } },
+                                { file: { categories: 'modelsTypes' } },
+                                { file: { categories: 'configsTypes' } },
+                            ],
+                        },
+                    },
+                    { from: { file: { categories: 'workerWorkflowsTypes' } }, allow: [] },
+                    {
+                        from: { file: { categories: 'workerWorkflows' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'workerWorkflows' } },
+                                { file: { categories: 'services' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'workerActivities' } },
+                                { file: { categories: 'workerWorkflowsTypes' } },
+                            ],
+                        },
+                    },
+                    {
+                        from: { file: { categories: 'workerSchedules' } },
+                        allow: {
+                            to: [
+                                { file: { categories: 'workerSchedules' } },
+                                { file: { categories: 'configsTypes' } },
+                                { file: { categories: 'workerWorkflows' } },
+                            ],
+                        },
+                    },
+                    { from: { file: { categories: 'migrations' } }, allow: { to: [{ file: { categories: '*' } }] } },
                 ],
             },
         ],
     },
 }
 
-export const base: Config = defineOxlintConfig(baseConfig) as Config
+export const base: Config = defineOxlintConfig(baseConfig)
 
 export const boundaries: Config = defineOxlintConfig({
     ...baseConfig,
     jsPlugins: [...(baseConfig.jsPlugins ?? []), ...(boundariesExtension.jsPlugins ?? [])],
     settings: { ...boundariesExtension.settings },
     rules: { ...baseConfig.rules, ...boundariesExtension.rules },
-}) as Config
+})
 
 const sharedOverrides = baseConfig.overrides ?? []
 

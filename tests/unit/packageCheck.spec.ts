@@ -277,6 +277,10 @@ ruleTester.run('peers-installed-locally', plugin.rules['peers-installed-locally'
     valid: [
         { code: 'export {}', filename: file({ ...library, peerDependencies: { hono: '>=4' }, devDependencies: { hono: '4.13.7' } }) },
         { code: 'export {}', filename: file({ ...service, peerDependencies: { hono: '>=4' } }) },
+        {
+            code: 'export {}',
+            filename: file({ ...library, peerDependencies: { hono: '>=4' }, peerDependenciesMeta: { hono: { optional: true } } }),
+        },
     ],
     invalid: [
         {

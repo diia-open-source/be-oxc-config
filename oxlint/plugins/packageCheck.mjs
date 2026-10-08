@@ -450,6 +450,7 @@ export const manifestRules = {
             isPrivate(data)
                 ? []
                 : Object.keys(data.peerDependencies ?? {})
+                      .filter((name) => data.peerDependenciesMeta?.[name]?.optional !== true)
                       .filter((name) => !(name in (data.devDependencies ?? {})) && !(name in (data.dependencies ?? {})))
                       .map((name) => ({ messageId: 'missing', data: { name } })),
     },

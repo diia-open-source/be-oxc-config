@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "4.0.2",
+    "version": "4.0.3",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -56,6 +56,9 @@
         "oxfmt": ">= 0.72.0",
         "oxlint": ">= 1.87.0",
         "oxlint-tsgolint": ">= 7.0.0"
+    },
+    "overrides": {
+        "handlebars": "4.7.10"
     },
     "commitlint": {
         "extends": "@diia-inhouse/configs/dist/commitlint"

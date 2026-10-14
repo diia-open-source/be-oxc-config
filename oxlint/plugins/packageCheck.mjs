@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, resolve } from 'node:path'
+import { isBuiltin } from 'node:module'
+import { dirname, join, relative, resolve } from 'node:path'
 
 const FIX_FLAGS = new Set(['--fix', '--fix-suggestions', '--fix-dangerously'])
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
@@ -56,6 +57,7 @@ const DEV_TOOL_PATTERNS = [
     /^rimraf$/,
     /^tsc-alias$/,
     /^tsc-watch$/,
+    /^@bufbuild\/buf$/,
     /^@diia-inhouse\/(test|oxc-config|configs|scaffold|eslint-config|eslint-plugin)$/,
 ]
 const DEFAULT_NODE_MAJOR = 24
@@ -63,6 +65,9 @@ const DEFAULT_AUTHOR = 'diia-team'
 const DEV_SCRIPT = 'diia-dev'
 const COMMITLINT_CONFIG = '@diia-inhouse/configs/dist/commitlint'
 const MADGE_TS_CONFIG = './tsconfig.json'
+const RUNTIME_SOURCE_PATTERN = /^src\//
+const TEST_SOURCE_PATTERN = /(^|\/)(tests?|__tests__|__mocks__)\/|\.(spec|test)\.[cm]?[jt]sx?$/
+const RUNTIME_DEPENDENCY_FIELDS = ['dependencies', 'peerDependencies', 'optionalDependencies']
 
 const isFixRun = () => process.argv.some((arg) => FIX_FLAGS.has(arg))
 
@@ -614,7 +619,151 @@ function defineRule(name, { messages, schema = [], check, fix }) {
     }
 }
 
+function importedPackage(specifier) {
+    if (typeof specifier !== 'string' || /^[./#]/.test(specifier) || isBuiltin(specifier)) {
+        return null
+    }
+
+    const [scope, name] = specifier.split('/')
+
+    return scope.startsWith('@') ? `${scope}/${name}` : scope
+}
+
+const isTypeOnly = (node, kindField) =>
+    node[kindField] === 'type' || (node.specifiers?.length > 0 && node.specifiers.every((specifier) => specifier[kindField] === 'type'))
+
+function runtimeManifest(context) {
+    const path = findManifest(context.filename)
+    const entry = path && loadManifest(path)
+    const source = path && relative(dirname(path), resolve(context.filename))
+
+    return entry && RUNTIME_SOURCE_PATTERN.test(source) && !TEST_SOURCE_PATTERN.test(source) ? entry : null
+}
+
+const runtimeImports = (check) => ({
+    ImportDeclaration(node) {
+        if (!isTypeOnly(node, 'importKind')) {
+            check(node, node.source.value)
+        }
+    },
+    ExportNamedDeclaration(node) {
+        if (node.source && !isTypeOnly(node, 'exportKind')) {
+            check(node, node.source.value)
+        }
+    },
+    ExportAllDeclaration(node) {
+        if (node.exportKind !== 'type') {
+            check(node, node.source.value)
+        }
+    },
+    TSImportEqualsDeclaration(node) {
+        if (node.importKind !== 'type' && node.moduleReference.type === 'TSExternalModuleReference') {
+            check(node, node.moduleReference.expression.value)
+        }
+    },
+    CallExpression(node) {
+        const [argument] = node.arguments
+
+        if (node.callee.type === 'Identifier' && node.callee.name === 'require' && argument?.type === 'Literal') {
+            check(node, argument.value)
+        }
+    },
+})
+
+function isInstalled(entry, name) {
+    entry.installed ??= new Map()
+
+    if (!entry.installed.has(name)) {
+        const dirs = []
+
+        for (let dir = dirname(entry.path); !dirs.includes(dir); dir = dirname(dir)) {
+            dirs.push(dir)
+        }
+
+        entry.installed.set(
+            name,
+            dirs.some((dir) => existsSync(join(dir, 'node_modules', name))),
+        )
+    }
+
+    return entry.installed.get(name)
+}
+
+const noDevDependencyImport = {
+    meta: {
+        type: 'problem',
+        messages: {
+            devDependency:
+                '"{{ name }}" is only a devDependency, and the release image does not install devDependencies. If only types are imported, use `import type`; if the code needs it at runtime, declare it in dependencies, or in peerDependencies in a library.',
+        },
+        schema: [],
+    },
+    create(context) {
+        const entry = runtimeManifest(context)
+
+        if (!entry) {
+            return {}
+        }
+
+        const { data } = entry
+
+        return runtimeImports((node, specifier) => {
+            const name = importedPackage(specifier)
+            const isDevOnly =
+                name !== null &&
+                name !== data.name &&
+                Object.hasOwn(data.devDependencies ?? {}, name) &&
+                !RUNTIME_DEPENDENCY_FIELDS.some((field) => Object.hasOwn(data[field] ?? {}, name))
+
+            if (isDevOnly) {
+                context.report({ node, messageId: 'devDependency', data: { name } })
+            }
+        })
+    },
+}
+
+const noUndeclaredImport = {
+    meta: {
+        type: 'problem',
+        messages: {
+            undeclared:
+                '"{{ name }}" is not declared in package.json and resolves only because another package installs it. If only types are imported, use `import type`. Not auto-fixed, because package-lock.json must change with it: run `npm i {{ name }}`, or declare it in peerDependencies in a library.',
+        },
+        schema: [],
+    },
+    create(context) {
+        const entry = runtimeManifest(context)
+
+        if (!entry) {
+            return {}
+        }
+
+        const { data } = entry
+        const declared = allDependencies(data)
+        const check = (node, specifier) => {
+            const name = importedPackage(specifier)
+
+            if (name !== null && name !== data.name && !Object.hasOwn(declared, name) && isInstalled(entry, name)) {
+                context.report({ node, messageId: 'undeclared', data: { name } })
+            }
+        }
+
+        return {
+            ...runtimeImports(check),
+            ImportExpression(node) {
+                if (node.source.type === 'Literal') {
+                    check(node, node.source.value)
+                }
+            },
+        }
+    },
+}
+
 export default {
     meta: { name: '@diia-inhouse/oxlint-plugin-package' },
-    rules: Object.fromEntries(Object.entries(manifestRules).map(([name, rule]) => [name, defineRule(name, rule)])),
+    rules: {
+        ...Object.fromEntries(Object.entries(manifestRules).map(([name, rule]) => [name, defineRule(name, rule)])),
+        'no-dev-dependency-import': noDevDependencyImport,
+        'no-undeclared-import': noUndeclaredImport,
+    },
 }

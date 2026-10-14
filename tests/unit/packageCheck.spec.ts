@@ -143,6 +143,11 @@ ruleTester.run('no-dev-tooling-in-dependencies', plugin.rules['no-dev-tooling-in
             }),
             errors: [{ messageId: 'tool' }, { messageId: 'tool' }],
         },
+        {
+            code: 'export {}',
+            filename: file({ ...service, dependencies: { '@bufbuild/protobuf': '2.12.0', '@bufbuild/buf': '1.59.0' } }),
+            errors: [{ messageId: 'tool' }],
+        },
     ],
 })
 
@@ -358,6 +363,85 @@ ruleTester.run('shared-configs', plugin.rules['shared-configs'], {
             code: 'export {}',
             filename: file({ ...service, commitlint: undefined, madge: { tsConfig: 'tsconfig.json' } }),
             errors: [{ messageId: 'commitlint' }, { messageId: 'madge' }],
+        },
+    ],
+})
+
+const withDevDependencies = fixture({
+    ...service,
+    devDependencies: { ...(service.devDependencies as Manifest), vitest: '5.0.3', lodash: '4.18.1', '@diia-inhouse/test': '8.3.37' },
+})
+const inFixture = (path: string): string => join(withDevDependencies.dir, path)
+
+ruleTester.run('no-dev-dependency-import', plugin.rules['no-dev-dependency-import'], {
+    valid: [
+        { code: "import { DiiaApp } from '@diia-inhouse/diia-app'", filename: withDevDependencies.file },
+        { code: "import type { Mock } from 'vitest'", filename: withDevDependencies.file },
+        { code: "import { type Mock } from 'vitest'", filename: withDevDependencies.file },
+        { code: "export type { Mock } from 'vitest'", filename: withDevDependencies.file },
+        { code: "import { readFile } from 'node:fs/promises'\nimport path from 'path'", filename: withDevDependencies.file },
+        { code: "import { a } from './a'\nimport { b } from '#b'", filename: withDevDependencies.file },
+        { code: "export const load = () => import('vitest')", filename: withDevDependencies.file },
+        { code: "import { describe } from 'vitest'", filename: inFixture('src/nested/index.spec.ts') },
+        { code: "import { describe } from 'vitest'", filename: inFixture('src/__mocks__/index.ts') },
+        { code: "import { describe } from 'vitest'", filename: inFixture('tests/unit/index.spec.ts') },
+        { code: "import { defineConfig } from 'vitest/config'", filename: inFixture('vitest.config.ts') },
+        {
+            code: "import { Hono } from 'hono'",
+            filename: file({ ...library, peerDependencies: { hono: '>=4' }, devDependencies: { hono: '4.13.7' } }),
+        },
+        {
+            code: "import { db } from '@diia-inhouse/db/postgres'",
+            filename: file({ ...library, devDependencies: { '@diia-inhouse/db': '1.0.0' } }),
+        },
+    ],
+    invalid: [
+        { code: "import { describe } from 'vitest'", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        { code: "import { type Mock, vi } from 'vitest'", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        { code: "import 'lodash'", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        {
+            code: "import { mockClass } from '@diia-inhouse/test/mocks'",
+            filename: withDevDependencies.file,
+            errors: [{ messageId: 'devDependency' }],
+        },
+        { code: "export { describe } from 'vitest'", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        { code: "export * from 'vitest'", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        { code: "const lodash = require('lodash')", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+        { code: "import lodash = require('lodash')", filename: withDevDependencies.file, errors: [{ messageId: 'devDependency' }] },
+    ],
+})
+
+const withInstalled = fixture(service)
+
+for (const name of ['@diia-inhouse/diia-app', '@diia-inhouse/configs', 'mongoose', '@temporalio/workflow']) {
+    mkdirSync(join(withInstalled.dir, 'node_modules', name), { recursive: true })
+}
+
+ruleTester.run('no-undeclared-import', plugin.rules['no-undeclared-import'], {
+    valid: [
+        { code: "import { DiiaApp } from '@diia-inhouse/diia-app/dist/app'", filename: withInstalled.file },
+        { code: "import { tsconfig } from '@diia-inhouse/configs'", filename: withInstalled.file },
+        {
+            code: "import { AddressService } from '@services/address'\nimport { proto } from '@src/generated'",
+            filename: withInstalled.file,
+        },
+        { code: "import type { Schema } from 'mongoose'", filename: withInstalled.file },
+        { code: "import { type Schema } from 'mongoose'", filename: withInstalled.file },
+        {
+            code: "import { readFile } from 'node:fs/promises'\nimport { a } from './a'\nimport { b } from '#b'",
+            filename: withInstalled.file,
+        },
+        { code: "import { address } from 'address'", filename: withInstalled.file },
+        { code: "import { Schema } from 'mongoose'", filename: join(withInstalled.dir, 'tests/unit/index.spec.ts') },
+    ],
+    invalid: [
+        { code: "import { Schema } from 'mongoose'", filename: withInstalled.file, errors: [{ messageId: 'undeclared' }] },
+        { code: "export * from 'mongoose'", filename: withInstalled.file, errors: [{ messageId: 'undeclared' }] },
+        { code: "const mongoose = require('mongoose')", filename: withInstalled.file, errors: [{ messageId: 'undeclared' }] },
+        {
+            code: "export const load = () => import('@temporalio/workflow/lib/sinks')",
+            filename: withInstalled.file,
+            errors: [{ messageId: 'undeclared' }],
         },
     ],
 })

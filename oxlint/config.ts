@@ -227,6 +227,8 @@ const baseConfig: Config = {
         '@diia-inhouse/package/stale-overrides': 'warn',
         '@diia-inhouse/package/peers-installed-locally': 'error',
         '@diia-inhouse/package/exports-package-json': 'error',
+        '@diia-inhouse/package/no-dev-dependency-import': 'error',
+        '@diia-inhouse/package/no-undeclared-import': 'error',
         '@diia-inhouse/locale/no-hardcoded-cyrillic': 'error',
         '@diia-inhouse/code/no-promise-settimeout': 'error',
         '@diia-inhouse/code/no-inline-object-return-type': 'error',

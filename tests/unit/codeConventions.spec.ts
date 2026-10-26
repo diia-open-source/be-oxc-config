@@ -313,3 +313,147 @@ ruleTester.run('const-enum-type-name', plugin.rules['const-enum-type-name'], {
         },
     ],
 })
+
+// --- logger-err-field ---
+
+ruleTester.run('logger-err-field', plugin.rules['logger-err-field'], {
+    valid: [
+        // No catch param
+        'try {} catch {}',
+
+        // Error under the err field
+        `
+        try {} catch (e) {
+            this.logger.error('message', { err: e })
+        }
+        `,
+
+        // Error under err inside a wider log object
+        `
+        try {} catch (e) {
+            this.logger.error('message', { err: e, context: { id } })
+        }
+        `,
+
+        // Log object declared first, with err
+        `
+        try {} catch (e) {
+            const errLog = { err: e, oneMoreField: true }
+
+            this.logger.error('message', errLog)
+        }
+        `,
+
+        // Error handled elsewhere, log object does not carry it
+        `
+        try {} catch (e) {
+            someFoo(e)
+
+            this.logger.error('message', { someLog: true })
+        }
+        `,
+
+        // A callback parameter is not the catch parameter
+        `
+        async function run() {
+            try {
+                return await this.external.receive()
+            } catch (e) {
+                return await utils.handleError(e, (someError) => {
+                    this.logger.error('Error when decrypting response', { error: someError })
+
+                    throw new UnauthorizedError()
+                })
+            }
+        }
+        `,
+
+        // Derived values logged under err
+        `
+        try {} catch (e) {
+            const err = someFoo(e)
+            const err2 = someFoo2(e)
+
+            this.logger.error('message', { err })
+        }
+        `,
+
+        // Inside a class method
+        `
+        class Service {
+            run() {
+                try {
+                    return 1
+                } catch (e) {
+                    this.logger.error('message', { err: e })
+                }
+            }
+        }
+        `,
+    ],
+
+    invalid: [
+        // Error under another field
+        {
+            code: `
+            try {} catch (e) {
+                this.logger.error('message', { field: e })
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+
+        // Shorthand property
+        {
+            code: `
+            try {} catch (error) {
+                this.logger.error('message', { error })
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+
+        // Error passed directly
+        {
+            code: `
+            try {} catch (e) {
+                this.logger.error('message', e)
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+
+        // Log object declared first, with the wrong field
+        {
+            code: `
+            try {} catch (e) {
+                const errLog = { error: e }
+
+                this.logger.error('message', errLog)
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+
+        // Every logger call in the catch block is checked, not only the last one
+        {
+            code: `
+            try {} catch (e) {
+                this.logger.warn('first', { error: e })
+                this.logger.error('second', { err: e })
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+
+        // Child logger
+        {
+            code: `
+            try {} catch (e) {
+                this.logger.child({ scope: 'x' }).error('message', { error: e })
+            }
+            `,
+            errors: [{ messageId: 'errField' }],
+        },
+    ],
+})

@@ -15,7 +15,6 @@ const baseConfig: Config = {
         resolve('eslint-plugin-security'),
         resolve('eslint-plugin-regexp'),
         { name: '@stylistic/js', specifier: resolve('@stylistic/eslint-plugin') },
-        resolve('@diia-inhouse/eslint-plugin'),
         { name: '@diia-inhouse/package', specifier: resolveFile('./plugins/packageCheck.mjs') },
         { name: '@diia-inhouse/locale', specifier: resolveFile('./plugins/noHardcodedCyrillic.mjs') },
         { name: '@diia-inhouse/test', specifier: resolveFile('./plugins/testConventions.mjs') },
@@ -209,7 +208,6 @@ const baseConfig: Config = {
         'security/detect-non-literal-fs-filename': 'error',
         'security/detect-non-literal-regexp': 'error',
 
-        '@diia-inhouse/logger-err-field': 'error',
         '@diia-inhouse/package/no-service-in-package-name': 'error',
         '@diia-inhouse/package/pinned-dependencies': 'error',
         '@diia-inhouse/package/unique-dependencies': 'error',
@@ -236,6 +234,7 @@ const baseConfig: Config = {
         '@diia-inhouse/code/prefer-as-const-object': 'error',
         '@diia-inhouse/code/const-enum-naming': 'error',
         '@diia-inhouse/code/const-enum-type-name': 'error',
+        '@diia-inhouse/code/logger-err-field': 'error',
 
         '@diia-inhouse/mongoose/status-requires-history': 'error',
         // Context-specific rules — off by default, enable per service in oxlint.config.ts

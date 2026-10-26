@@ -13,6 +13,7 @@ const LEGACY_PACKAGES = [
     'eslint-config-prettier',
     'eslint-plugin-prettier',
     '@diia-inhouse/eslint-config',
+    '@diia-inhouse/eslint-plugin',
     'prettier',
     'prettier-plugin-sort-imports',
     '@ianvs/prettier-plugin-sort-imports',

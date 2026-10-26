@@ -77,6 +77,83 @@ function isValidPlural(rawSingular, rawPlural) {
     return false
 }
 
+const LOGGER_PROPERTY = 'logger'
+const ERROR_FIELD = 'err'
+
+function isNode(value) {
+    return value !== null && typeof value === 'object' && typeof value.type === 'string'
+}
+
+function collect(root, predicate) {
+    const found = []
+
+    const walk = (node) => {
+        if (predicate(node)) {
+            found.push(node)
+        }
+
+        for (const key of Object.keys(node)) {
+            if (key === 'parent') {
+                continue
+            }
+
+            const value = node[key]
+
+            if (Array.isArray(value)) {
+                for (const child of value) {
+                    if (isNode(child)) {
+                        walk(child)
+                    }
+                }
+            } else if (isNode(value)) {
+                walk(value)
+            }
+        }
+    }
+
+    walk(root)
+
+    return found
+}
+
+function isThisLogger(node) {
+    return (
+        node.type === 'MemberExpression' &&
+        node.object.type === 'ThisExpression' &&
+        node.property.type === 'Identifier' &&
+        node.property.name === LOGGER_PROPERTY
+    )
+}
+
+// this.logger.error(...) and chains such as this.logger.child(...).warn(...)
+function isLoggerCall(node) {
+    if (node.type !== 'CallExpression') {
+        return false
+    }
+
+    let callee = node.callee
+
+    while (callee.type === 'MemberExpression' || callee.type === 'CallExpression') {
+        if (isThisLogger(callee)) {
+            return true
+        }
+
+        callee = callee.type === 'MemberExpression' ? callee.object : callee.callee
+    }
+
+    return false
+}
+
+function isErrorUnderWrongField(node, errorName) {
+    return (
+        node.type === 'Property' &&
+        node.value.type === 'Identifier' &&
+        node.value.name === errorName &&
+        node.key.type === 'Identifier' &&
+        node.key.name !== ERROR_FIELD
+    )
+}
+
 export default {
     meta: { name: '@diia-inhouse/oxlint-plugin-code' },
     rules: {
@@ -268,6 +345,48 @@ export default {
                         for (const declarator of node.declarations) {
                             if (declarator.init && isEnumLikeObject(declarator.init)) {
                                 context.report({ node: declarator.init, messageId: 'missingAsConst' })
+                            }
+                        }
+                    },
+                }
+            },
+        },
+
+        'logger-err-field': {
+            meta: {
+                type: 'problem',
+                messages: {
+                    errField: 'Error must be logged only in the object with [err] field. For example: <{err: e}>',
+                },
+            },
+            create(context) {
+                return {
+                    CatchClause(node) {
+                        if (!node.param || node.param.type !== 'Identifier') {
+                            return
+                        }
+
+                        const errorName = node.param.name
+                        const report = (target) => context.report({ node: target, messageId: 'errField' })
+                        const wrongFields = (root) => collect(root, (candidate) => isErrorUnderWrongField(candidate, errorName))
+
+                        for (const call of collect(node.body, isLoggerCall)) {
+                            for (const arg of call.arguments) {
+                                if (arg.type === 'Identifier' && arg.name === errorName) {
+                                    report(arg)
+                                } else if (arg.type === 'Identifier') {
+                                    const declarators = collect(
+                                        node.body,
+                                        (candidate) =>
+                                            candidate.type === 'VariableDeclarator' &&
+                                            candidate.id.type === 'Identifier' &&
+                                            candidate.id.name === arg.name,
+                                    )
+
+                                    declarators.flatMap(wrongFields).forEach(report)
+                                } else if (arg.type === 'ObjectExpression') {
+                                    wrongFields(arg).forEach(report)
+                                }
                             }
                         }
                     },

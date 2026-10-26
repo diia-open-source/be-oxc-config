@@ -5,7 +5,7 @@ import { dirname, join, relative, resolve } from 'node:path'
 const FIX_FLAGS = new Set(['--fix', '--fix-suggestions', '--fix-dangerously'])
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']
 const PUBLISH_FIELDS = ['license', 'files', 'publishConfig', 'repository']
-const LEGACY_CONFIG_FIELDS = ['prettier', 'eslintConfig', 'eslintIgnore']
+const LEGACY_CONFIG_FIELDS = ['prettier', 'eslintConfig', 'eslintIgnore', 'madge']
 const LEGACY_PACKAGES = [
     'eslint',
     'typescript-eslint',
@@ -20,9 +20,14 @@ const LEGACY_PACKAGES = [
     'ts-node',
     'ts-node-dev',
     'nodemon',
+    'madge',
 ]
-const LEGACY_SCRIPT_NAMES = new Set(['eslint', 'prettier'])
-const LEGACY_TOOL_PATTERN = /\b(eslint|prettier)\b/
+const LEGACY_SCRIPTS = new Map([
+    ['eslint', 'eslint'],
+    ['prettier', 'prettier'],
+    ['find-circulars', 'madge'],
+])
+const LEGACY_TOOL_PATTERN = /\b(eslint|prettier|madge)\b/
 const SERVICE_NAME_PATTERN = /^service-|-service$/
 const VERSION_RANGE_PATTERN = /^[\^~]/
 const EXACT_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
@@ -50,7 +55,6 @@ const DEV_TOOL_PATTERNS = [
     /^@eslint\//,
     /^prettier(-|$)/,
     /^typescript$/,
-    /^madge$/,
     /^lockfile-lint$/,
     /^semantic-release(-|$)/,
     /^@semantic-release\//,
@@ -64,7 +68,6 @@ const DEFAULT_NODE_MAJOR = 24
 const DEFAULT_AUTHOR = 'diia-team'
 const DEV_SCRIPT = 'diia-dev'
 const COMMITLINT_CONFIG = '@diia-inhouse/configs/dist/commitlint'
-const MADGE_TS_CONFIG = './tsconfig.json'
 const RUNTIME_SOURCE_PATTERN = /^src\//
 const TEST_SOURCE_PATTERN = /(^|\/)(tests?|__tests__|__mocks__)\/|\.(spec|test)\.[cm]?[jt]sx?$/
 const RUNTIME_DEPENDENCY_FIELDS = ['dependencies', 'peerDependencies', 'optionalDependencies']
@@ -408,7 +411,7 @@ export const manifestRules = {
             const violations = []
 
             for (const [name, body] of Object.entries(scripts)) {
-                const tool = LEGACY_SCRIPT_NAMES.has(name) ? name : LEGACY_TOOL_PATTERN.exec(String(body))?.[1]
+                const tool = LEGACY_SCRIPTS.get(name) ?? LEGACY_TOOL_PATTERN.exec(String(body))?.[1]
 
                 if (tool) {
                     violations.push({ messageId: 'script', data: { name, tool } })
@@ -419,7 +422,7 @@ export const manifestRules = {
         },
         fix: (data) => {
             for (const [name, body] of Object.entries(data.scripts ?? {})) {
-                if (LEGACY_SCRIPT_NAMES.has(name)) {
+                if (LEGACY_SCRIPTS.has(name)) {
                     delete data.scripts[name]
                 } else {
                     data.scripts[name] = String(body)
@@ -558,7 +561,6 @@ export const manifestRules = {
     'shared-configs': {
         messages: {
             commitlint: 'package.json "commitlint.extends" must be "{{ expected }}" so commit messages are checked by the shared rules.',
-            madge: 'package.json "madge.tsConfig" must be "{{ expected }}" so find-circulars resolves the same paths as the build.',
         },
         check: (data) => {
             const violations = []
@@ -567,19 +569,11 @@ export const manifestRules = {
                 violations.push({ messageId: 'commitlint', data: { expected: COMMITLINT_CONFIG } })
             }
 
-            if (dependsOn(data, 'madge') && data.madge?.tsConfig !== MADGE_TS_CONFIG) {
-                violations.push({ messageId: 'madge', data: { expected: MADGE_TS_CONFIG } })
-            }
-
             return violations
         },
         fix: (data) => {
             if (dependsOn(data, '@diia-inhouse/configs')) {
                 data.commitlint = { ...data.commitlint, extends: COMMITLINT_CONFIG }
-            }
-
-            if (dependsOn(data, 'madge')) {
-                data.madge = { ...data.madge, tsConfig: MADGE_TS_CONFIG }
             }
 
             return data

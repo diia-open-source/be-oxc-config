@@ -83,6 +83,7 @@ const baseConfig: Config = {
         'import/prefer-default-export': 'off',
         'import/named': 'off',
         'import/namespace': 'off',
+        'import/no-cycle': ['error', { ignoreTypes: true }],
         'import/no-unassigned-import': ['warn', { allow: ['**/*.css', 'reflect-metadata', 'module-alias/register'] }],
 
         'typescript/consistent-type-assertions': ['error', { assertionStyle: 'as' }],

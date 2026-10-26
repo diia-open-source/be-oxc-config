@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "5.0.2",
+    "version": "6.0.0",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -25,7 +25,6 @@
         "prepare": "npm run build",
         "lint": "oxlint && oxfmt --check",
         "lint-fix": "oxlint --fix && oxfmt",
-        "find-circulars": "madge --circular --extensions ts ./",
         "lint:lockfile": "lockfile-lint --path package-lock.json --allowed-hosts registry.npmjs.org --validate-https",
         "semantic-release": "semantic-release"
     },
@@ -45,7 +44,6 @@
         "@vitest/coverage-v8": "5.0.5",
         "@vitest/ui": "5.0.5",
         "lockfile-lint": "5.0.1",
-        "madge": "8.0.0",
         "oxfmt": "0.72.0",
         "oxlint": "1.87.0",
         "oxlint-tsgolint": "7.0.2003",
@@ -68,8 +66,5 @@
     },
     "engines": {
         "node": ">=24"
-    },
-    "madge": {
-        "tsConfig": "./tsconfig.json"
     }
 }

@@ -30,10 +30,9 @@ const service: Manifest = {
     type: 'module',
     scripts: { build: 'tsc', dev: 'diia-dev', lint: 'oxlint && oxfmt --check .' },
     dependencies: { '@diia-inhouse/diia-app': '34.3.0' },
-    devDependencies: { '@diia-inhouse/configs': '7.2.2', '@types/node': '24.13.2', madge: '8.0.0' },
+    devDependencies: { '@diia-inhouse/configs': '7.2.2', '@types/node': '24.13.2' },
     engines: { node: '>=24' },
     commitlint: { extends: '@diia-inhouse/configs/dist/commitlint' },
-    madge: { tsConfig: './tsconfig.json' },
 }
 
 const library: Manifest = {
@@ -235,6 +234,11 @@ ruleTester.run('no-legacy-tooling', plugin.rules['no-legacy-tooling'], {
             filename: file({ ...service, devDependencies: { eslint: '9.0.0', 'tsc-watch': '7.2.0' } }),
             errors: [{ messageId: 'installed' }],
         },
+        {
+            code: 'export {}',
+            filename: file({ ...service, devDependencies: { madge: '8.0.0' } }),
+            errors: [{ messageId: 'installed' }],
+        },
     ],
 })
 
@@ -244,6 +248,11 @@ ruleTester.run('no-legacy-config-fields', plugin.rules['no-legacy-config-fields'
         {
             code: 'export {}',
             filename: file({ ...service, prettier: '@diia-inhouse/eslint-config/prettier' }),
+            errors: [{ messageId: 'field' }],
+        },
+        {
+            code: 'export {}',
+            filename: file({ ...service, madge: { tsConfig: './tsconfig.json' } }),
             errors: [{ messageId: 'field' }],
         },
     ],
@@ -258,6 +267,14 @@ ruleTester.run('no-legacy-scripts', plugin.rules['no-legacy-scripts'], {
         {
             code: 'export {}',
             filename: file({ ...service, scripts: { prettier: 'prettier --write .', 'lint-fix:locales': 'prettier --write src/locales' } }),
+            errors: [{ messageId: 'script' }, { messageId: 'script' }],
+        },
+        {
+            code: 'export {}',
+            filename: file({
+                ...service,
+                scripts: { 'find-circulars': 'madge --circular --extensions ts ./', circulars: 'npx madge --circular ./' },
+            }),
             errors: [{ messageId: 'script' }, { messageId: 'script' }],
         },
     ],
@@ -361,8 +378,8 @@ ruleTester.run('shared-configs', plugin.rules['shared-configs'], {
     invalid: [
         {
             code: 'export {}',
-            filename: file({ ...service, commitlint: undefined, madge: { tsConfig: 'tsconfig.json' } }),
-            errors: [{ messageId: 'commitlint' }, { messageId: 'madge' }],
+            filename: file({ ...service, commitlint: undefined }),
+            errors: [{ messageId: 'commitlint' }],
         },
     ],
 })
@@ -488,14 +505,17 @@ describe('manifest fixes', () => {
     })
 
     it('drops the eslint-era config fields', () => {
-        expect(manifestRules['no-legacy-config-fields'].fix({ prettier: 'x', eslintConfig: {}, name: 'a' }, {})).toEqual({ name: 'a' })
+        expect(manifestRules['no-legacy-config-fields'].fix({ prettier: 'x', eslintConfig: {}, madge: {}, name: 'a' }, {})).toEqual({
+            name: 'a',
+        })
     })
 
-    it('drops prettier scripts, rewrites prettier calls to oxfmt and leaves what it cannot translate', () => {
+    it('drops prettier and find-circulars scripts, rewrites prettier calls to oxfmt and leaves what it cannot translate', () => {
         const fixed = manifestRules['no-legacy-scripts'].fix(
             {
                 scripts: {
                     prettier: 'prettier --write .',
+                    'find-circulars': 'madge --circular --extensions ts ./',
                     'lint-fix:locales': 'prettier --write src/locales',
                     'lint:locales': 'prettier --check src/locales',
                     lint: 'eslint . && oxfmt --check .',
@@ -519,11 +539,10 @@ describe('manifest fixes', () => {
         })
     })
 
-    it('wires the shared commitlint and madge configs only for packages that use those tools', () => {
-        const fixed = manifestRules['shared-configs'].fix({ devDependencies: { '@diia-inhouse/configs': '7.2.2', madge: '8.0.0' } }, {})
+    it('wires the shared commitlint config only for packages that use it', () => {
+        const fixed = manifestRules['shared-configs'].fix({ devDependencies: { '@diia-inhouse/configs': '7.2.2' } }, {})
 
         expect(fixed.commitlint).toEqual({ extends: '@diia-inhouse/configs/dist/commitlint' })
-        expect(fixed.madge).toEqual({ tsConfig: './tsconfig.json' })
         expect(manifestRules['shared-configs'].fix({ devDependencies: {} }, {})).toEqual({ devDependencies: {} })
     })
 

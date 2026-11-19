@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "6.1.3",
+    "version": "6.2.0",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -20,7 +20,7 @@
         "./package.json": "./package.json"
     },
     "scripts": {
-        "test": "vitest run",
+        "test": "tsc --project tests/tsconfig.json --noEmit && vitest run",
         "build": "rm -rf dist && tsc -p tsconfig.build.json && cp -r oxlint/plugins dist/oxlint/",
         "prepare": "npm run build",
         "lint": "oxlint && oxfmt --check",
@@ -29,33 +29,28 @@
         "semantic-release": "semantic-release"
     },
     "dependencies": {
-        "@boundaries/eslint-plugin": "7.2.1",
-        "@stylistic/eslint-plugin": "5.10.0",
+        "@boundaries/eslint-plugin": "7.4.4",
+        "@stylistic/eslint-plugin": "6.0.1",
         "eslint-import-resolver-oxc": "0.15.0",
-        "eslint-plugin-regexp": "3.3.1",
-        "eslint-plugin-security": "4.2.0",
+        "eslint-plugin-regexp": "3.3.3",
+        "eslint-plugin-security": "4.2.1",
         "tsx": "4.23.15"
     },
     "devDependencies": {
         "@diia-inhouse/configs": "7.2.5",
-        "@typescript-eslint/parser": "8.71.1",
-        "@typescript-eslint/rule-tester": "8.71.1",
-        "@vitest/coverage-v8": "5.0.5",
-        "@vitest/ui": "5.0.5",
-        "lockfile-lint": "5.0.1",
-        "oxfmt": "0.72.0",
-        "oxlint": "1.87.0",
-        "oxlint-tsgolint": "7.0.2003",
+        "@typescript-eslint/rule-tester": "8.73.0",
+        "@vitest/coverage-v8": "5.1.1",
+        "oxfmt": "0.79.0",
+        "oxlint": "1.94.0",
+        "oxlint-tsgolint": "7.0.2007",
         "semantic-release": "25.0.9",
-        "vitest": "5.0.5"
+        "typescript": "5.9.3",
+        "vitest": "5.1.1"
     },
     "peerDependencies": {
         "oxfmt": ">= 0.72.0",
         "oxlint": ">= 1.87.0",
         "oxlint-tsgolint": ">= 7.0.0"
-    },
-    "overrides": {
-        "handlebars": "4.7.10"
     },
     "commitlint": {
         "extends": "@diia-inhouse/configs/dist/commitlint"

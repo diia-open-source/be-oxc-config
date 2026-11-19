@@ -26,7 +26,11 @@ const files: Record<string, string> = {
 
 const lint = (): string[] => {
     const dir = mkdtempSync(join(tmpdir(), 'no-cycle-'))
-    const config = { plugins: ['import'], categories: { correctness: 'off' }, rules: { 'import/no-cycle': base.rules['import/no-cycle'] } }
+    const config = {
+        plugins: ['import'],
+        categories: { correctness: 'off' },
+        rules: { 'import/no-cycle': base.rules?.['import/no-cycle'] },
+    }
 
     writeFileSync(join(dir, '.oxlintrc.json'), JSON.stringify(config))
 

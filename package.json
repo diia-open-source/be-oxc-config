@@ -1,6 +1,6 @@
 {
     "name": "@diia-inhouse/oxc-config",
-    "version": "6.2.1",
+    "version": "6.2.2",
     "description": "OXC toolchain configs for Diia services: oxlint, oxfmt, oxc transformer",
     "license": "SEE LICENSE IN LICENSE.md",
     "author": "diia-team",
@@ -37,7 +37,7 @@
         "tsx": "4.23.15"
     },
     "devDependencies": {
-        "@diia-inhouse/configs": "7.4.0",
+        "@diia-inhouse/configs": "7.5.0",
         "@types/node": "26.6.6",
         "@typescript-eslint/rule-tester": "8.73.0",
         "@vitest/coverage-v8": "5.1.1",
